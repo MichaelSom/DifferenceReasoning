@@ -1,0 +1,75 @@
+--Working Furniture Scene--
+
+Tsdf_max: 0.0125
+Tsdf_slope: 0.2
+Tsdf_thres: 0.002
+
+Number_of_samples: 1000
+Grid_size: 0.4
+Generation_radius: 0
+
+DENSE:
+Grid_size: 32x32x32
+
+
+--Realtime Reconstruction, Tree--
+
+Tsdf_max: 0.05
+Tsdf_slope: 0.8
+Tsdf_thres: 0.05
+
+Number_of_samples: 1000
+Grid_size: 0.4
+Generation_radius: 0
+
+DENSE:
+Grid_size: 8x8x8
+
+--Results--
+
+Vertices: 27500
+Triangles: 23300
+Memory: 0.75 GB
+Framerate: 30 FPS
+
+
+--Realtime Reconstruction, Tree--
+
+Tsdf_max: 0.05
+Tsdf_slope: 0.8
+Tsdf_thres: 0.05
+
+Number_of_samples: 1000
+Grid_size: 0.8
+Generation_radius: 0
+
+DENSE:
+Grid_size: 16x16x16
+
+--Results--
+
+Vertices: 27500
+Triangles: 23300
+Memory: 0.75 GB
+Framerate: 10 FPS
+
+
+--Realtime Reconstruction, Tree--
+
+Tsdf_max: 0.05
+Tsdf_slope: 0.8
+Tsdf_thres: 0.05
+
+Number_of_samples: 1000
+Grid_size: 0.2
+Generation_radius: 0
+
+DENSE:
+Grid_size: 4x4x4
+
+--Results--
+
+Vertices: 27500
+Triangles: 23300
+Memory: 0.75 GB
+Framerate: 10 FPS
