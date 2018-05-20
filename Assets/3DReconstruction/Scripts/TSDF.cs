@@ -102,17 +102,20 @@ public class TSDF : MonoBehaviour {
                     Vector3 worldcoord = dvg.DenseGridCoordToWorldCoord(x, y, z);
                     //Retrieve corresponding pixel coordinates
                     Vector2Int pixelcoord = GetPixelFromCoords(worldcoord);
-                    //Retrieve VoxelType from pixelcoords
-                    VoxelType vt = GetVoxelType(pixelcoord);
-                    //Only update value if it is green/red in the image
-                    if (vt != VoxelType.EMPTY)
+                    if(pixelcoord.x >= 0 && pixelcoord.y >= 0 && pixelcoord.x < interface_.differenceImage.width && pixelcoord.y < interface_.differenceImage.height)
                     {
-                        float dist_exact = GetDistanceToCameraScreen(worldcoord);
-                        float dist_measured = GetMeasuredDistance(vt, pixelcoord);
-                        bool out_of_range = false;
-                        float tsdf = GetTSDFValue(dist_exact, dist_measured, out out_of_range);
-                        if(!out_of_range)
-                            dvg.active_count += UpdateVoxel(ref dvg.grid[x, y, z], tsdf, vt);
+                        //Retrieve VoxelType from pixelcoords
+                        VoxelType vt = GetVoxelType(pixelcoord);
+                        //Only update value if it is green/red in the image
+                        if (vt != VoxelType.EMPTY)
+                        {
+                            float dist_exact = GetDistanceToCameraScreen(worldcoord);
+                            float dist_measured = GetMeasuredDistance(vt, pixelcoord);
+                            bool out_of_range = false;
+                            float tsdf = GetTSDFValue(dist_exact, dist_measured, out out_of_range);
+                            if (!out_of_range)
+                                dvg.active_count += UpdateVoxel(ref dvg.grid[x, y, z], tsdf, vt);
+                        }
                     }
                 }
             }
