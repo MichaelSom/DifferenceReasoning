@@ -1,6 +1,11 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+//@author: Pierre Beckmann, Mathis Lamarre
+//@co-author: Michael Sommerhalder, Dominik Frey, Nikhilesh Alatur
+//
+//This Shader renders the depth information of every pixel of the camera.
+//The shader is mainly adopted from DifferenceReasoning's RenderColorDepth.shader,
+//however some changes were made in the function frag (see below) to increase precision.
 
- Shader "Custom/RenderColorDepth" //The shader take the name after the slash. In this case the name is RenderDepth and not Custom/RenderDepth.
+Shader "Custom/RenderColorDepth" //The shader take the name after the slash. In this case the name is RenderDepth and not Custom/RenderDepth.
  {
      Properties //Equivalent to public fields in a C# script. Gives access from the inspector to the hidden variables within a shader.
      {
@@ -60,7 +65,10 @@
                  return o;
              }
              
-             fixed4 frag(output o) : COLOR //Gives colour to every pixel. Since vertex & fragment shaders don't have any notion of lighting, returning red means that the entire model will be #ffoooo red, with no shades or details; just a red silhouette.
+			 //CHANGES WERE MADE HERE!
+			 //Instead of output a single fixed, output an encoded fixed4
+			 //Implemented Method "EncodeFloatRGBA"
+			 fixed4 frag(output o) : COLOR //Gives colour to every pixel. Since vertex & fragment shaders don't have any notion of lighting, returning red means that the entire model will be #ffoooo red, with no shades or details; just a red silhouette.
              {
 				 fixed4 d;
                  float depth = UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv)); //tex2D gets the value at the uv value; 

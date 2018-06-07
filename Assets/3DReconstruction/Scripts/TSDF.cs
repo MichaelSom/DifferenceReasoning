@@ -2,36 +2,46 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//@author: Michael Sommerhalder, Dominik Frey, Nikhilesh Alatur
+//
+//This is the main script that gets executed either once per frame or via the UI Reconstruction Button.
+//It holds the HashTable field and the functions to reconstruct the scene.
+
 public class TSDF : MonoBehaviour {
 
+    //The update frame is increased every time the reconstruction is executed
     static int update_frame = 1;
 
+    //Reference to the interfae
     public Interface interface_;
+
+    //HashTable field
     public SparseVoxelGrid SVG;
 
+    //Toggle if reconstruction is done offline or online
     public bool constant_reconstruction;
 
+    //Calculates the time used to reconstruct the scene if in offline mode
     [ReadOnly]
     public float last_update_duration = 0f;
 
     //Voxel is Rendered if btw threshold values
+    //TSDF parameters
     [Header("Lower and Upper Render threshold")]
     public float tsdf_max;
     public float tsdf_slope;
     public float tsdf_thres;
 
-    //How many random samples should be drawn from single image?
+    //How many random samples should be drawn from single snapshot?
     [Header("Number of MonteCarlo Samples")]
     public int number_of_samples;
     public int number_of_samples_realtime;
 
-    // Use this for initialization
-    void Start () {
+    //This function is unused but has to be overwritten by Unity
+    void Start () {}
 
-	}
-	
-	// Update is called once per frame
-	void Update () {
+    //If it is reconstructed online, ReconstructScene() gets called every frame
+    void Update () {
         if (constant_reconstruction)
         {
             number_of_samples = number_of_samples_realtime;
@@ -41,14 +51,15 @@ public class TSDF : MonoBehaviour {
 
     //Main Method to Update Voxel Value.
     //Input:
-    //value - value, calculated from the TSD Function.
+    //value - calculated from the TSD Function.
     //x, y, z - grid coordinates of Voxel to update
     //current_update_frame - this ensures that voxels only get updated once
 
-    //Main Method Called From Reconstruction Button
+    //Main Method Called From Reconstruction Button or via online update
     public void ReconstructScene()
     {
         Debug.Log("Reconstruction");
+        //Used to measure reconstruction time
         var watch = System.Diagnostics.Stopwatch.StartNew();
         //Step 1: Choose Pixels at Random and Project Point to 3D View
         int width = interface_.differenceImage.width;
@@ -57,9 +68,10 @@ public class TSDF : MonoBehaviour {
         for (int i = 0; i < number_of_samples; i++)
         {
             VoxelType vt = VoxelType.EMPTY;
-            //Draw a Random Pixel from difference Image
+            //1.1 Draw a Random Pixel from difference Image
             Vector2Int pixel = new Vector2Int();
             int overflow = 0;
+            //1.2 Check if pixel is not empty and repeat if necessary
             while (vt == VoxelType.EMPTY && overflow < 1000)
             {
                 pixel.x = (int)(Random.value * width);
@@ -67,24 +79,28 @@ public class TSDF : MonoBehaviour {
                 vt = GetVoxelType(pixel);
                 overflow++;
             }
-            //Image to Voxel Grid
+            //1.3 Calculate coordinates of voxel from pixel depth value
             Vector3 voxelcoords = GetCoordsFromPixel(vt, pixel);
+            //1.4 Recieve DenseVoxelGrid at this position or create a new one if necessary
             DenseVoxelGrid dvg = SVG.GetDenseVoxelGrid(voxelcoords);
-            //Voxel Grid to Image
+            //1.5 Update DenseVoxelGrid at this position by backprojecting all voxels
             UpdateDenseVoxelGrid(dvg, update_frame);
             ind++;
         }
         Debug.Log(ind + " Pixels found a surface");
 
+        //Step 3: Look for empty voxel blocks and remove them
         SVG.RemoveEmptyVoxelGrids();
 
         update_frame++;
-        // the code that you want to measure comes here
+
+        //Display elapsed time
         watch.Stop();
         var elapsedMs = watch.ElapsedMilliseconds;
         Debug.Log("Reconstruction took " + elapsedMs + "Milliseconds");
     }
 
+    //Function to update each voxel within a voxel grid
     public void UpdateDenseVoxelGrid(DenseVoxelGrid dvg, int current_update_frame)
     {
         //Only update if voxelgrid was not updated this frame
@@ -102,6 +118,7 @@ public class TSDF : MonoBehaviour {
                     Vector3 worldcoord = dvg.DenseGridCoordToWorldCoord(x, y, z);
                     //Retrieve corresponding pixel coordinates
                     Vector2Int pixelcoord = GetPixelFromCoords(worldcoord);
+                    //Check if pixel is within camera image
                     if(pixelcoord.x >= 0 && pixelcoord.y >= 0 && pixelcoord.x < interface_.differenceImage.width && pixelcoord.y < interface_.differenceImage.height)
                     {
                         //Retrieve VoxelType from pixelcoords
@@ -109,10 +126,14 @@ public class TSDF : MonoBehaviour {
                         //Only update value if it is green/red in the image
                         if (vt != VoxelType.EMPTY)
                         {
+                            //Calculate the exact distance btw the camera and the voxel
                             float dist_exact = GetDistanceToCameraScreen(worldcoord);
+                            //Calculate the measured distance btw the camera and the voxel
                             float dist_measured = GetMeasuredDistance(vt, pixelcoord);
                             bool out_of_range = false;
+                            //Calculate the TSDF value of this voxel
                             float tsdf = GetTSDFValue(dist_exact, dist_measured, out out_of_range);
+                            //If the voxel is out of range (last part of the tsdf), truncate, else update the voxel
                             if (!out_of_range)
                                 dvg.active_count += UpdateVoxel(ref dvg.grid[x, y, z], tsdf, vt);
                         }
@@ -120,17 +141,20 @@ public class TSDF : MonoBehaviour {
                 }
             }
         }
+        //Render the updated block
         dvg.Render();
 
         //Set current update frame in voxelgrid
         dvg.last_update_frame = current_update_frame;
     }
 
-    //DONE
+    //Updates the voxel using the tsdf value and the proposed VoxelType
     public int UpdateVoxel(ref Voxel v, float tsdf, VoxelType vt)
     {
+        //See paper
         v.value = (v.value * v.updates + tsdf) / (v.updates + 1);
         v.updates++;
+        //If value is within threshold, set voxel to proposed VoxelType
         if (v.value > -tsdf_thres && v.value < tsdf_thres)
         {
             v.type = vt;
@@ -138,6 +162,7 @@ public class TSDF : MonoBehaviour {
         }
         else
         {
+            //Set voxel to be empty
             v.type = VoxelType.EMPTY;
             if (vt != VoxelType.EMPTY)
                 return -1;
@@ -146,7 +171,7 @@ public class TSDF : MonoBehaviour {
         }
     }
 
-    //DONE + checked
+    //Calculates the Pixel coordinates from world coordinates
     public Vector2Int GetPixelFromCoords(Vector3 worldcoord)
     {
         //Camera Position in World Frame
@@ -174,7 +199,8 @@ public class TSDF : MonoBehaviour {
         Vector2Int pixel = new Vector2Int((int)pixelHom.x, (int)pixelHom.y);
         return pixel;
     }
-    //DONE + checked
+
+    //Calculates the world coordinates of the voxel using the depth information at the pixel coordinates
     public Vector3 GetCoordsFromPixel(VoxelType vt, Vector2Int pixelcoords)
     {
         Vector3 campos = interface_.position.position;
@@ -192,7 +218,8 @@ public class TSDF : MonoBehaviour {
         return campos + vectorCameraToPixel;
 
     }
-    //DONE
+
+    //Returns the type visible in the depth difference image
     public VoxelType GetVoxelType(Vector2Int pixelcoord)
     {
         Color p = interface_.differenceImage.GetPixel(pixelcoord.x, pixelcoord.y);
@@ -202,7 +229,8 @@ public class TSDF : MonoBehaviour {
             return VoxelType.LIVE;
         return VoxelType.EMPTY;
     }
-    //DONE
+
+    //Calculates the TSDF value using the measured and calculated distance
     public float GetTSDFValue(float dist1, float dist2, out bool out_of_range)
     {
         float dif = dist1 - dist2;
@@ -220,7 +248,8 @@ public class TSDF : MonoBehaviour {
         else
             return -tsdf_slope * dif;
     }
-    //DONE
+
+    //Decodes depth information and returns depth in meter
     public float GetMeasuredDistance(VoxelType vt, Vector2Int pixelcoords)
     {
         float depthFactor = 1000;
@@ -229,7 +258,8 @@ public class TSDF : MonoBehaviour {
         else
             return DecodeColor(interface_.referenceDepthImage.GetPixel(pixelcoords.x, pixelcoords.y)) * depthFactor;
     }
-    //DONE
+
+    //Calculates the distance from a point in worldspace to the camera screen's position
     public float GetDistanceToCameraScreen(Vector3 worldcoord)
     {
         //Camera Position in World Frame
@@ -246,7 +276,7 @@ public class TSDF : MonoBehaviour {
         return Vector3.Magnitude(vectorCameraToVoxel) * Mathf.Cos(angle);
     }
 
-    //Done
+    //Decodes the depth encoded by the depth shader
     private float DecodeColor(Color c)
     {
         Vector4 color1 = new Vector4(c.r, c.g, c.b, c.a);

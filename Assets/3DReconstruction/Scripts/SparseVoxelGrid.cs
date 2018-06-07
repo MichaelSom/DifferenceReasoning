@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//@author: Michael Sommerhalder, Dominik Frey, Nikhilesh Alatur
+
 /* DESCRIPTION
 *   Infinite Voxel Grid: 
 *       Origin: Should be exactly at (0,0,0) of the global coordinate system (vertex of 8 neighbouring cubes).
@@ -17,7 +19,6 @@ using UnityEngine;
 *   VoxelGeneration.cs: Integrates DepthMap + DifferenceMap into existing VoxelGrid.
 */
 
-// DATA STRUCTURES.
 // Value for the hash table (key->value).
 public struct HashtableValue
 {
