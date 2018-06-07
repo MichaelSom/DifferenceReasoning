@@ -4,6 +4,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using SimpleDiskUtils;
 
+// @author: Dominik Frey, Michael Sommerhalder, Nikhilesh Alatur
+// This script displays the curent framerate of the Unity Simulation to the user.
+
 public class FPSController : MonoBehaviour {
 
     public Text text;
