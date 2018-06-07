@@ -1,4 +1,4 @@
 sceneSetups:
-- path: Assets/3DReconstruction/Scenes/TSDT_Test.unity
+- path: Assets/3DReconstruction/Scenes/RealScene.unity
   isLoaded: 1
   isActive: 1

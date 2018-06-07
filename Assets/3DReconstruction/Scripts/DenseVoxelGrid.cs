@@ -2,7 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// DATA STRUCTURES.
+//@author: Michael Sommerhalder, Dominik Frey, Nikhilesh Alatur
+//
+//This file is attached to the DenseVoxelGrid-Prefab and gets instantiated for every newly generated dense voxel grid.
+//Its purpose is to provide conversion methods from the local index space to world coordinates and vice verca.
+//Additionally, it contains the functions to build and render the mesh.
+
+//Data structure used for every voxel. A voxel can either be empty, removed (reference) or added (live)
 public enum VoxelType
 {
     EMPTY,
@@ -10,6 +16,7 @@ public enum VoxelType
     REFERENCE
 }
 
+//Data structure containing all information a voxel needs
 public struct Voxel
 {
     // The current value of the TSDF.
@@ -18,17 +25,17 @@ public struct Voxel
     public int updates;
     // What was the last update frame?
     public int last_update_frame;
-    // Is the voxel seen from reference or live camera?
-    public VoxelType type;      
+    // Is the voxel seen from reference or live camera or none/both?
+    public VoxelType type;
 }
 
-// MAIN CLASS.
+//Main class.
 public class DenseVoxelGrid : MonoBehaviour
 {
     // 3D Array where Voxels are stored.
     public Voxel[ , , ] grid;
 
-    // Number of voxels.
+    // Number of voxels in each dimension. Can be set from outside
     [Header("Voxel count in x, y and z direction")]
     public Vector3Int grid_size;
 
@@ -37,25 +44,27 @@ public class DenseVoxelGrid : MonoBehaviour
     [ReadOnly]
     public int active_count;
 
+    //Last frame this DVG got updated
     [Header("Last Update Frame")]
     [ReadOnly]
     public int last_update_frame;
 
-    private Mesh mesh;              //Mesh of the resulting PointCloud
+    private Mesh mesh;              //Mesh of the resulting DVG
     private List<Vector3> vertices; //Mesh vertices
     private List<Color> colors;     //Mesh vertex colors
     private List<int> indices;      //Mesh indices
 
-
-    // UNITY.
+    //This function is called by Unity once the GameObject is created.
+    //It initializes all fields
     void Awake()
     {
+        //Initialize Mesh
         mesh = new Mesh();
         vertices = new List<Vector3>();
         colors = new List<Color>();
         indices = new List<int>();
 
-        //Set all to empty, no updates, frame#=0
+        //Set all fields to empty, no updates, frame#=0
         grid = new Voxel[grid_size.x, grid_size.y, grid_size.z];
         for (int ix = 0; ix < grid_size.x; ix++)
         {
@@ -72,6 +81,7 @@ public class DenseVoxelGrid : MonoBehaviour
         }
     }
 
+    //Conversion from world coordinates to the corresponding voxel indices
     public Vector3Int WorldCoordToDenseGridCoord(Vector3 worldcoord)
     {
         Vector3 local = transform.InverseTransformPoint(worldcoord) + new Vector3(0.5f, 0.5f, 0.5f);
@@ -80,6 +90,8 @@ public class DenseVoxelGrid : MonoBehaviour
         local.z *= grid_size.z;
         return new Vector3Int((int)local.x, (int)local.y, (int)local.z);
     }
+
+    //Conversion from voxel indices to the corresponding world coordinates
     public Vector3 DenseGridCoordToWorldCoord(int x, int y, int z)
     {
         Vector3 local = new Vector3()
@@ -95,21 +107,8 @@ public class DenseVoxelGrid : MonoBehaviour
         return DenseGridCoordToWorldCoord(gridcoord.x, gridcoord.y, gridcoord.z);
     }
 
-    public Voxel GetVoxelFromGrid(Vector3Int gridcoord)
-    {
-        return grid[gridcoord.x, gridcoord.y, gridcoord.z];
-    }
-    public Voxel GetVoxelFromWorld(Vector3 worldcoord)
-    {
-        return GetVoxelFromGrid(WorldCoordToDenseGridCoord(worldcoord));
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-    }
-
-    //Used by Render Method
+    //Conversion from voxel indices to the corresponding local coordinates
+    //this script is attached to (used for rendering)
     private Vector3 DenseGridCoordToLocalCoord(float cx, float cy, float cz)
     {
         Vector3 local = new Vector3()
@@ -121,23 +120,43 @@ public class DenseVoxelGrid : MonoBehaviour
         return local;
     }
 
+    //Returns the voxel at the given voxel indices
+    public Voxel GetVoxelFromGrid(Vector3Int gridcoord)
+    {
+        return grid[gridcoord.x, gridcoord.y, gridcoord.z];
+    }
+
+    //Returns the voxel at the given world coordinates
+    public Voxel GetVoxelFromWorld(Vector3 worldcoord)
+    {
+        return GetVoxelFromGrid(WorldCoordToDenseGridCoord(worldcoord));
+    }
+
+    //This function is unused but has to be overwritten by Unity
+    void Update(){}
+
+    //This function is called from TSDF. It renders all voxels as cubes that are not empty.
+    //To optimize the mesh, cube sizes that are covered by another cube are not rendered as well
     public void Render()
     {
+        //1. Reset all fields
         vertices.Clear();
         indices.Clear();
         colors.Clear();
+        mesh.Clear();
+        //2. For every voxel in the DVG do:
         for (int ix = 0; ix < grid_size.x; ix++)
         {
             for (int iy = 0; iy < grid_size.y; iy++)
             {
                 for (int iz = 0; iz < grid_size.z; iz++)
                 {
-                    //                    Debug.Log(grid[ix, iy, iz].updates + " " + grid[ix, iy, iz].value);
                     //If the voxel is not empty and not yet rendered, render it
                     if (grid[ix, iy, iz].type != VoxelType.EMPTY)
                     {
                         switch (grid[ix, iy, iz].type)
                         {
+                            //Reference voxels get colored red and live voxels get colored green
                             case VoxelType.REFERENCE:
                                 RenderVoxel(ix, iy, iz, Color.red);
                                 break;
@@ -152,16 +171,7 @@ public class DenseVoxelGrid : MonoBehaviour
                 }
             }
         }
-        /*
-        RenderVoxel(0, 0, 0, Color.green);
-        RenderVoxel(grid_size.x - 1, 0, 0, Color.green);
-        RenderVoxel(0, grid_size.y - 1, 0, Color.green);
-        RenderVoxel(grid_size.x - 1, grid_size.y - 1, 0, Color.green);
-        RenderVoxel(0, 0, grid_size.z - 1, Color.green);
-        RenderVoxel(grid_size.x - 1, 0, grid_size.z - 1, Color.green);
-        RenderVoxel(0, grid_size.y - 1, grid_size.z - 1, Color.green);
-        RenderVoxel(grid_size.x - 1, grid_size.y - 1, grid_size.z - 1, Color.green);*/
-        mesh.Clear();
+        //3. Build the mesh
         mesh.vertices = vertices.ToArray();
         mesh.triangles = indices.ToArray();
         mesh.colors = colors.ToArray();
@@ -170,10 +180,12 @@ public class DenseVoxelGrid : MonoBehaviour
         GetComponent<MeshFilter>().mesh = mesh;
     }
 
+    //Renders the voxel with the given color at the given position and checks for neighbouring voxels to optimize
     private void RenderVoxel(int ix, int iy, int iz, Color color)
     {
         if (iy < grid_size.y - 1)
         {
+            //If voxel above is empty, render
             if (grid[ix, iy + 1, iz].type == VoxelType.EMPTY)
                 RenderTop(ix, iy, iz, color);
         }
@@ -182,6 +194,7 @@ public class DenseVoxelGrid : MonoBehaviour
 
         if (iy > 0)
         {
+            //If voxel below is empty, render
             if (grid[ix, iy - 1, iz].type == VoxelType.EMPTY)
                 RenderBottom(ix, iy, iz, color);
         }
@@ -190,6 +203,7 @@ public class DenseVoxelGrid : MonoBehaviour
 
         if (ix < grid_size.x - 1)
         {
+            //If right voxel is empty, render
             if (grid[ix + 1, iy, iz].type == VoxelType.EMPTY)
                 RenderRight(ix, iy, iz, color);
         }
@@ -198,6 +212,7 @@ public class DenseVoxelGrid : MonoBehaviour
 
         if (ix > 0)
         {
+            //If left voxel is empty, render
             if (grid[ix - 1, iy, iz].type == VoxelType.EMPTY)
                 RenderLeft(ix, iy, iz, color);
         }
@@ -206,6 +221,7 @@ public class DenseVoxelGrid : MonoBehaviour
 
         if (iz < grid_size.z - 1)
         {
+            //If voxel in the back is empty, render
             if (grid[ix, iy, iz + 1].type == VoxelType.EMPTY)
                 RenderBack(ix, iy, iz, color);
         }
@@ -214,6 +230,7 @@ public class DenseVoxelGrid : MonoBehaviour
 
         if (iz > 0)
         {
+            //If voxel in the front is empty, render
             if (grid[ix, iy, iz - 1].type == VoxelType.EMPTY)
                 RenderFront(ix, iy, iz, color);
         }
@@ -221,6 +238,8 @@ public class DenseVoxelGrid : MonoBehaviour
             RenderFront(ix, iy, iz, color);
 
     }
+
+    //Six render functions for each side of the cube due to different triangle indexing
     private void RenderTop(int ix, int iy, int iz, Color color)
     {
         int vsize = vertices.Count;

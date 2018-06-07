@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
+//@author: Dominik Frey, Michael Sommerhalder, Nikhilesh Alatur
+//
+//This file is used to display values in the editor that should not be changed.
+//Mainly used for debugging
+
 [CustomPropertyDrawer(typeof(ReadOnlyAttribute))]
 public class ReadOnlyDrawer : PropertyDrawer
 {

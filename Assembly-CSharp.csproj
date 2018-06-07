@@ -54,7 +54,6 @@
      <Compile Include="Assets\3DReconstruction\Scripts\DenseVoxelGrid.cs" />
      <Compile Include="Assets\3DReconstruction\Scripts\Interface.cs" />
      <Compile Include="Assets\3DReconstruction\Scripts\SparseVoxelGrid.cs" />
-     <Compile Include="Assets\3DReconstruction\Scripts\TESTING.cs" />
      <Compile Include="Assets\3DReconstruction\Scripts\TSDF.cs" />
      <Compile Include="Assets\3DReconstruction\Scripts\Util\CameraMovement.cs" />
      <Compile Include="Assets\3DReconstruction\Scripts\Util\FPSController.cs" />
@@ -758,7 +757,6 @@
      <None Include="Assets\Free_Rocks\Standard Assets\Effects\ImageEffects\Shaders\SimpleClear.shader" />
      <None Include="Assets\Free_Rocks\Standard Assets\Effects\TessellationShaders\Shaders\BumpedSpecularDisplacement.shader" />
      <None Include="Assets\DifferenceReasoning\Resources\MRDL\Fonts\LICENSE.txt" />
-     <None Include="Assets\3DReconstruction\Scripts\params.txt" />
      <None Include="Assets\MRDesignLab\HUX\Resources\Materials\TransparentUnlit.shader" />
      <None Include="Assets\Free_Rocks\Standard Assets\Effects\ImageEffects\Shaders\_Antialiasing\FXAA3Console.shader" />
      <None Include="Assets\HoloToolkit\Utilities\Shaders\BlinnPhongConfigurable.shader" />
