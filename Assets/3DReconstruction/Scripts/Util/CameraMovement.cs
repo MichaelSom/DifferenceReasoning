@@ -2,8 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// @author: Dominik Frey, Michael Sommerhalder, Nikhilesh Alatur
+// This script enables the user to use the keyboard to move around Unity Game Objects.
+// This script will move whatever game object it is attached to.
+// W = Forward, S = Backward, A = Left, D = Right, Space = Up, Left-Shift = Down, Q = Rotate Left, E = Rotate Right.
+
 public class CameraMovement : MonoBehaviour {
 
+    // Set the speed of camera movement.
     public float speed;
 
 	// Use this for initialization
