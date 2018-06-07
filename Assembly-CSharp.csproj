@@ -54,7 +54,6 @@
      <Compile Include="Assets\3DReconstruction\Scripts\DenseVoxelGrid.cs" />
      <Compile Include="Assets\3DReconstruction\Scripts\Interface.cs" />
      <Compile Include="Assets\3DReconstruction\Scripts\SparseVoxelGrid.cs" />
-     <Compile Include="Assets\3DReconstruction\Scripts\TESTING.cs" />
      <Compile Include="Assets\3DReconstruction\Scripts\TSDF.cs" />
      <Compile Include="Assets\3DReconstruction\Scripts\Util\CameraMovement.cs" />
      <Compile Include="Assets\3DReconstruction\Scripts\Util\FPSController.cs" />

@@ -922,10 +922,12 @@ MonoBehaviour:
   interface_: {fileID: 1086142060}
   SVG: {fileID: 1015919268}
   constant_reconstruction: 1
+  last_update_duration: 0
   tsdf_max: 0.05
   tsdf_slope: 0.8
   tsdf_thres: 0.05
   number_of_samples: 1000
+  number_of_samples_realtime: 2
 --- !u!114 &1015919268
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1438,7 +1440,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1585096364}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 300.5, y: 190.5, z: 0}
+  m_LocalPosition: {x: 270.5, y: 290, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1600523210}
@@ -1463,6 +1465,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   text: {fileID: 1880772626}
+  disk: {fileID: 0}
 --- !u!1 &1600523209
 GameObject:
   m_ObjectHideFlags: 0
@@ -1488,7 +1491,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1600523209}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 300.5, y: 190.5, z: 0}
+  m_LocalPosition: {x: 270.5, y: 290, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 527210798}
@@ -1609,7 +1612,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1681684697}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -300.5, y: 190.5, z: 0}
+  m_LocalPosition: {x: -270.5, y: 290, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1880772625}

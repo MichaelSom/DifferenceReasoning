@@ -40,6 +40,9 @@
  
              struct output
              {
+				 /*	
+				 *	
+				 */	
                  float4 pos : SV_POSITION; //Initialise with screen position of a vertex. Despite requiring only two values (X and Y), SV_POSITION typically contains also a Z and W components, used to store the depth (ZTest) and one value for the homogeneous space, respectively.
                  half2 uv : TEXCOORD0;
              };
